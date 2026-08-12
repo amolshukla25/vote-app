@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [artNumInput, setArtNumInput] = useState("");
   const [voteDeltaInput, setVoteDeltaInput] = useState("1");
   const [artSearch, setArtSearch] = useState("");
+  const [ticketSearch, setTicketSearch] = useState("");
   const { show, el: toastEl } = useToast();
 
   const headers = useCallback(() => ({ "X-Admin-Pin": savedPin }), [savedPin]);
@@ -51,8 +52,9 @@ export default function AdminPage() {
     document.title = "Admin — " + s.eventTitle;
   }, [headers]);
 
-  async function adjustVotes(artNumber: number, count: number, action: "add" | "remove" = "add") {
+  async function adjustVotes(artNumber: number, count: number, action: "add" | "remove" | "clear" = "add") {
     try {
+      if (action === "clear" && !confirm(`Clear ALL votes for Candidate #${artNumber}?`)) return;
       setBusy(true);
       const res = await apiPost<{ success: boolean; artNumber: number; artVotes: number }>(
         "/api/admin/votes",
@@ -60,10 +62,11 @@ export default function AdminPage() {
         headers()
       );
       if (res.success) {
-        show(
-          `${action === "add" ? "Added +" : "Removed -"}${count} vote${count > 1 ? "s" : ""} for Candidate #${artNumber} (Total: ${res.artVotes}) ✓`,
-          "success"
-        );
+        const msg =
+          action === "clear"
+            ? `Cleared all votes for Candidate #${artNumber} ✓`
+            : `${action === "add" ? "Added +" : "Removed -"}${count} vote${count > 1 ? "s" : ""} for Candidate #${artNumber} (Total: ${res.artVotes}) ✓`;
+        show(msg, "success");
         await refreshState();
       }
     } catch (err) {
@@ -419,16 +422,27 @@ export default function AdminPage() {
                                 +10
                               </button>
                               {art.votes > 0 && (
-                                <button
-                                  type="button"
-                                  className="btn small"
-                                  disabled={busy}
-                                  onClick={() => adjustVotes(art.number, 1, "remove")}
-                                  title="Remove 1 vote"
-                                  style={{ color: "var(--danger)", borderColor: "rgba(248,113,113,0.3)" }}
-                                >
-                                  -1
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn small"
+                                    disabled={busy}
+                                    onClick={() => adjustVotes(art.number, 1, "remove")}
+                                    title="Remove 1 vote"
+                                    style={{ color: "var(--danger)", borderColor: "rgba(248,113,113,0.3)" }}
+                                  >
+                                    -1
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn small danger"
+                                    disabled={busy}
+                                    onClick={() => adjustVotes(art.number, 0, "clear")}
+                                    title="Clear all votes for this candidate"
+                                  >
+                                    🗑️ Clear
+                                  </button>
+                                </>
                               )}
                             </div>
                           </td>
@@ -586,6 +600,17 @@ export default function AdminPage() {
               ↻ Refresh list
             </button>
           </div>
+          {tickets !== null && tickets.length > 0 && (
+            <div style={{ marginTop: 14, marginBottom: 14 }}>
+              <input
+                type="text"
+                placeholder="🔍 Search voter ticket # or token to remove..."
+                value={ticketSearch}
+                onChange={(e) => setTicketSearch(e.target.value)}
+                style={{ maxWidth: 300, fontSize: 13.5 }}
+              />
+            </div>
+          )}
           <div className="qr-list" id="qrList">
             {tickets === null ? (
               <div className="empty-state" style={{ gridColumn: "1/-1", padding: 30 }}>
@@ -598,25 +623,42 @@ export default function AdminPage() {
                 No voter tickets yet — generate some above.
               </div>
             ) : (
-              [...tickets.filter((t) => t.voteCount === 0), ...tickets.filter((t) => t.voteCount > 0)].map((v) => (
-                <div key={v.token} className={"qr-ticket" + (v.voteCount > 0 ? " voted" : "")}>
-                  <div className="t-label">Art Showdown · Vote</div>
-                  <div className="t-token">#{v.short}</div>
-                  {v.qr ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- data-URL QR ticket
-                    <img src={v.qr} alt="QR" />
-                  ) : (
-                    <div className="t-qr">⚠️ QR failed</div>
-                  )}
-                  <div className="t-meta">
-                    {v.voteCount > 0 ? "Voted: #" + v.votes.join(", #") : "Not voted yet"}
+              [...tickets.filter((t) => t.voteCount === 0), ...tickets.filter((t) => t.voteCount > 0)]
+                .filter(
+                  (t) =>
+                    !ticketSearch.trim() ||
+                    t.short.toLowerCase().includes(ticketSearch.trim().toLowerCase()) ||
+                    t.token.toLowerCase().includes(ticketSearch.trim().toLowerCase()) ||
+                    t.votes.some((v) => String(v).includes(ticketSearch.trim()))
+                )
+                .map((v) => (
+                  <div key={v.token} className={"qr-ticket" + (v.voteCount > 0 ? " voted" : "")}>
+                    <div className="t-label">Art Showdown · Vote</div>
+                    <div className="t-token">#{v.short}</div>
+                    {v.qr ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- data-URL QR ticket
+                      <img src={v.qr} alt="QR" />
+                    ) : (
+                      <div className="t-qr">⚠️ QR failed</div>
+                    )}
+                    <div className="t-meta">
+                      {v.voteCount > 0 ? "Voted: #" + v.votes.join(", #") : "Not voted yet"}
+                    </div>
+                    <div className="t-qr">🔒 scan to vote</div>
+                    <button
+                      className="btn small danger"
+                      style={{ marginTop: 6 }}
+                      onClick={() => {
+                        if (confirm(`Remove voter ticket #${v.short}? This will also delete their votes.`)) {
+                          removeTicket(v.token);
+                        }
+                      }}
+                      title="Remove this voter ticket and revoke their votes"
+                    >
+                      🗑️ Remove Voter
+                    </button>
                   </div>
-                  <div className="t-qr">🔒 scan to vote</div>
-                  <button className="btn small" style={{ marginTop: 6 }} onClick={() => removeTicket(v.token)}>
-                    Remove
-                  </button>
-                </div>
-              ))
+                ))
             )}
           </div>
         </div>

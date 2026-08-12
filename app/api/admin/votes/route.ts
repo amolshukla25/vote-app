@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const artNumber = parseInt(String(body.artNumber), 10);
-    const action = body.action === "remove" ? "remove" : "add";
+    const action = body.action === "clear" ? "clear" : body.action === "remove" ? "remove" : "add";
     const countInput = parseInt(String(body.count ?? 1), 10);
     const count = Math.max(1, Math.abs(Number.isNaN(countInput) ? 1 : countInput));
 
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
 
     const db = await getDb();
     const votesCol = db.collection<{ _id: number; voters: string[] }>(COLLECTIONS.VOTES);
+    const votersCol = db.collection<{ _id: string; votes: number[] }>(COLLECTIONS.VOTERS);
 
     if (action === "add") {
       const newTokens: string[] = [];
@@ -47,6 +48,16 @@ export async function POST(req: Request) {
         { $push: { voters: { $each: newTokens } } },
         { upsert: true }
       );
+    } else if (action === "clear") {
+      const doc = await votesCol.findOne({ _id: artNumber });
+      if (doc && Array.isArray(doc.voters) && doc.voters.length > 0) {
+        for (const token of doc.voters) {
+          if (!token.startsWith("admin_added_")) {
+            await votersCol.updateOne({ _id: token }, { $pull: { votes: artNumber } });
+          }
+        }
+        await votesCol.updateOne({ _id: artNumber }, { $set: { voters: [] } });
+      }
     } else {
       const doc = await votesCol.findOne({ _id: artNumber });
       if (doc && Array.isArray(doc.voters) && doc.voters.length > 0) {
@@ -54,7 +65,13 @@ export async function POST(req: Request) {
         const adminTokens = doc.voters.filter((v) => v.startsWith("admin_added_"));
         const nonAdminTokens = doc.voters.filter((v) => !v.startsWith("admin_added_"));
         const reordered = [...nonAdminTokens, ...adminTokens];
-        reordered.splice(reordered.length - removeCount, removeCount);
+        const removed = reordered.splice(reordered.length - removeCount, removeCount);
+
+        for (const token of removed) {
+          if (!token.startsWith("admin_added_")) {
+            await votersCol.updateOne({ _id: token }, { $pull: { votes: artNumber } });
+          }
+        }
 
         await votesCol.updateOne(
           { _id: artNumber },
