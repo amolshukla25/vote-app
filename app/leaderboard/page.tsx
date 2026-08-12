@@ -73,12 +73,13 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const t = setInterval(async () => {
       try {
+        if (!configRef.current) return; // initial load failed — don't clobber state
         const [votes, cfg] = await Promise.all([
           apiGet<{ counts: Record<string, number> }>("/api/votes"),
           apiGet<PublicConfig>("/api/config"),
         ]);
         setCounts(votes.counts);
-        if (cfg.votingOpen !== configRef.current?.votingOpen) {
+        if (cfg.votingOpen !== configRef.current.votingOpen) {
           const next = { ...configRef.current!, votingOpen: cfg.votingOpen };
           configRef.current = next;
           setConfig(next);

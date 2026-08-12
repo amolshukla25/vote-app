@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getDb, COLLECTIONS } from "@/lib/db";
-import { isAdmin, json } from "@/lib/http";
+import { json, requireAdmin } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
-  if (!(await isAdmin(req))) return json({ error: "Invalid admin PIN" }, 401);
   try {
+    const denied = await requireAdmin(req);
+    if (denied) return denied;
     const { token } = await params;
     const db = await getDb();
     const votersCol = db.collection<{ _id: string; votes: number[] }>(COLLECTIONS.VOTERS);

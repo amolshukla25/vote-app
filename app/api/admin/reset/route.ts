@@ -1,14 +1,15 @@
 import { NextRequest } from "next/server";
 import { getDb, COLLECTIONS } from "@/lib/db";
-import { isAdmin, json } from "@/lib/http";
+import { json, requireAdmin } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
 /** Reset votes and/or all voter tickets.
  *  POST /api/admin/reset  body: { type: "votes" | "all" } */
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(req))) return json({ error: "Invalid admin PIN" }, 401);
   try {
+    const denied = await requireAdmin(req);
+    if (denied) return denied;
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const type = body.type;
     const db = await getDb();

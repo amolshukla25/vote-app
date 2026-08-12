@@ -17,3 +17,17 @@ export async function isAdmin(req: Request): Promise<boolean> {
   const config = await getConfig();
   return pin === String(config.adminPin);
 }
+
+/**
+ * Admin gate for route handlers: returns a `Response` to short-circuit with
+ * when the caller is not authorized (or the DB is unreachable), or `null` to
+ * proceed. Never throws, so a DB outage yields a clean JSON error.
+ */
+export async function requireAdmin(req: Request): Promise<Response | null> {
+  try {
+    if (await isAdmin(req)) return null;
+    return json({ error: "Invalid admin PIN" }, 401);
+  } catch {
+    return json({ error: "Database unavailable — please try again" }, 500);
+  }
+}

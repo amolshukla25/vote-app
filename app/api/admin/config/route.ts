@@ -2,15 +2,16 @@ import { NextRequest } from "next/server";
 import { artList, normalizeCategories } from "@/lib/config";
 import { getConfig, saveConfig } from "@/lib/data";
 import { getDb, COLLECTIONS } from "@/lib/db";
-import { isAdmin, json } from "@/lib/http";
+import { json, requireAdmin } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
 /** Update event settings and/or categories (requires X-Admin-Pin).
  *  POST /api/admin/config */
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin(req))) return json({ error: "Invalid admin PIN" }, 401);
   try {
+    const denied = await requireAdmin(req);
+    if (denied) return denied;
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const config = await getConfig();
 

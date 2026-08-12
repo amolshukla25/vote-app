@@ -38,7 +38,6 @@ export interface Winner {
 
 export interface AdminState {
   eventTitle: string;
-  adminPin: string;
   votingOpen: boolean;
   votesPerVoter: number;
   categories: Category[];

@@ -19,6 +19,11 @@ interface VoterDoc {
  * are intentionally idempotent ($pull / $addToSet) to stay consistent even if
  * a request retries. The vote-limit check uses an atomic $expr guard so two
  * rapid taps can't exceed the per-voter limit.
+ *
+ * Tradeoff: the two writes aren't wrapped in a transaction (Atlas M0 shared
+ * clusters don't support them). A failure between the two leaves a stale
+ * count until that vote is toggled again or an admin reset — acceptable at
+ * this scale, and fixable by moving to a transaction on a paid Atlas tier.
  */
 export async function POST(req: NextRequest) {
   try {

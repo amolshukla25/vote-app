@@ -418,8 +418,12 @@ export default function AdminPage() {
                 <div key={v.token} className={"qr-ticket" + (v.voteCount > 0 ? " voted" : "")}>
                   <div className="t-label">Art Showdown · Vote</div>
                   <div className="t-token">#{v.short}</div>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- data-URL QR ticket */}
-                  <img src={v.qr} alt="QR" />
+                  {v.qr ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- data-URL QR ticket
+                    <img src={v.qr} alt="QR" />
+                  ) : (
+                    <div className="t-qr">⚠️ QR failed</div>
+                  )}
                   <div className="t-meta">
                     {v.voteCount > 0 ? "Voted: #" + v.votes.join(", #") : "Not voted yet"}
                   </div>

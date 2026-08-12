@@ -1,15 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { artList } from "@/lib/config";
 import { getConfig, getCounts, getVoterCount } from "@/lib/data";
-import { isAdmin, json } from "@/lib/http";
+import { json, requireAdmin } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
 /** Full admin state (requires X-Admin-Pin header).
  *  GET /api/admin/state */
-export async function GET(req: NextRequest) {
-  if (!(await isAdmin(req))) return json({ error: "Invalid admin PIN" }, 401);
+export async function GET(req: Request) {
   try {
+    const denied = await requireAdmin(req);
+    if (denied) return denied;
+
     const config = await getConfig();
     const { counts, totalVotes } = await getCounts();
     const arts = artList(config);
@@ -20,7 +22,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       eventTitle: config.eventTitle,
-      adminPin: config.adminPin,
       votingOpen: config.votingOpen,
       votesPerVoter: config.votesPerVoter,
       categories: config.categories,
