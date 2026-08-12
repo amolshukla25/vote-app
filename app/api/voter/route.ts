@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getDb, COLLECTIONS } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  * Registers a new voter and returns a unique token (QR check-in).
  * POST /api/voter
  */
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const db = await getDb();
     const token = randomBytes(12).toString("hex");

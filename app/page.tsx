@@ -263,6 +263,8 @@ export default function VotePage() {
                   >
                     {art.img ? (
                       <div className="art-media">
+                        {" "}
+                        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic /art/* files added by the organizer */}
                         <img src={art.img} alt={"Artwork " + art.number} loading="lazy" />
                       </div>
                     ) : (

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { artList, normalizeCategories } from "@/lib/config";
 import { getConfig, saveConfig } from "@/lib/data";
 import { getDb, COLLECTIONS } from "@/lib/db";

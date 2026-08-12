@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { artImages } from "@/lib/art";
 import { toPublicConfig } from "@/lib/config";
 import { getConfig } from "@/lib/data";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** Public event config + artwork images.
  *  GET /api/config */
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const config = await getConfig();
     return NextResponse.json(toPublicConfig(config, artImages()));

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Preserved legacy Express app (CommonJS, not part of the Next.js app).
+    "legacy-express/**",
   ]),
 ]);
 

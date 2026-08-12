@@ -24,7 +24,6 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const configRef = useRef<PublicConfig | null>(null);
-  const artsRef = useRef<Art[]>([]);
   const winnerShown = useRef(false);
 
   async function load() {
@@ -45,7 +44,6 @@ export default function LeaderboardPage() {
       }
     }
     setArts(list);
-    artsRef.current = list;
   }
 
   useEffect(() => {
@@ -69,7 +67,6 @@ export default function LeaderboardPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---------- Live refresh ----------
@@ -93,6 +90,17 @@ export default function LeaderboardPage() {
     return () => clearInterval(t);
   }, []);
 
+  const votingClosed = !!config && !config.votingOpen;
+  const hasWinner = arts.some((a) => (counts[a.number] || 0) > 0);
+
+  // Fire confetti once when a winner is revealed after voting closes.
+  useEffect(() => {
+    if (votingClosed && hasWinner && !winnerShown.current) {
+      winnerShown.current = true;
+      runConfetti();
+    }
+  }, [votingClosed, hasWinner]);
+
   if (error) {
     return (
       <div className="lb-wrap">
@@ -114,15 +122,6 @@ export default function LeaderboardPage() {
   const totalVotes = Object.values(counts).reduce((s, v) => s + v, 0);
   const maxVotes = ranked.length ? ranked[0].votes : 0;
   const top3 = ranked.slice(0, 3);
-
-  const votingClosed = config && !config.votingOpen;
-  const hasWinner = ranked.length > 0 && ranked[0].votes > 0;
-
-  // Fire confetti once when a winner is revealed after voting closes.
-  if (votingClosed && hasWinner && !winnerShown.current) {
-    winnerShown.current = true;
-    runConfetti();
-  }
 
   const cats = [...new Set(arts.map((a) => a.category.id))];
 
@@ -185,7 +184,12 @@ export default function LeaderboardPage() {
           </div>
 
           <aside className="qr-card">
-            {qr ? <img src={qr} alt="QR code to vote" /> : <img src="" alt="" hidden />}
+            {qr ? (
+              // eslint-disable-next-line @next/next/no-img-element -- data-URL QR code
+              <img src={qr} alt="QR code to vote" />
+            ) : (
+              <div style={{ width: 148, height: 148 }} />
+            )}
             <p>
               <b>Scan to vote</b>
               <br />
