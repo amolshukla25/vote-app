@@ -15,9 +15,15 @@ export async function GET(req: Request) {
     const config = await getConfig();
     const { counts, totalVotes } = await getCounts();
     const arts = artList(config);
+    const artworks = arts.map((a) => ({
+      number: a.number,
+      category: a.category,
+      votes: counts[a.number] || 0,
+    }));
+
     const winner =
-      arts
-        .map((a) => ({ ...a, votes: counts[a.number] || 0 }))
+      artworks
+        .slice()
         .sort((a, b) => b.votes - a.votes)[0] ?? null;
 
     return NextResponse.json({
@@ -29,6 +35,7 @@ export async function GET(req: Request) {
       winner: winner && winner.votes > 0 ? winner : null,
       voterCount: await getVoterCount(),
       artCount: arts.length,
+      artworks,
     });
   } catch (err) {
     return json({ error: err instanceof Error ? err.message : "Request failed" }, 500);

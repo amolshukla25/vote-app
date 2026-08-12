@@ -36,6 +36,12 @@ export interface Winner {
   votes: number;
 }
 
+export interface AdminArtwork {
+  number: number;
+  category: Category;
+  votes: number;
+}
+
 export interface AdminState {
   eventTitle: string;
   votingOpen: boolean;
@@ -45,6 +51,7 @@ export interface AdminState {
   winner: Winner | null;
   voterCount: number;
   artCount: number;
+  artworks: AdminArtwork[];
 }
 
 export interface VoterTicket {

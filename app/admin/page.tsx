@@ -37,6 +37,9 @@ export default function AdminPage() {
   const [pinErr, setPinErr] = useState("");
   const [qrCount, setQrCount] = useState(10);
   const [busy, setBusy] = useState(false);
+  const [artNumInput, setArtNumInput] = useState("");
+  const [voteDeltaInput, setVoteDeltaInput] = useState("1");
+  const [artSearch, setArtSearch] = useState("");
   const { show, el: toastEl } = useToast();
 
   const headers = useCallback(() => ({ "X-Admin-Pin": savedPin }), [savedPin]);
@@ -47,6 +50,40 @@ export default function AdminPage() {
     setCats(toEditable(s.categories));
     document.title = "Admin — " + s.eventTitle;
   }, [headers]);
+
+  async function adjustVotes(artNumber: number, count: number, action: "add" | "remove" = "add") {
+    try {
+      setBusy(true);
+      const res = await apiPost<{ success: boolean; artNumber: number; artVotes: number }>(
+        "/api/admin/votes",
+        { artNumber, count, action },
+        headers()
+      );
+      if (res.success) {
+        show(
+          `${action === "add" ? "Added +" : "Removed -"}${count} vote${count > 1 ? "s" : ""} for Candidate #${artNumber} (Total: ${res.artVotes}) ✓`,
+          "success"
+        );
+        await refreshState();
+      }
+    } catch (err) {
+      show(err instanceof Error ? err.message : "Failed to update candidate votes", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleManualSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const num = parseInt(artNumInput, 10);
+    const count = parseInt(voteDeltaInput, 10) || 1;
+    if (isNaN(num) || num <= 0) {
+      show("Please enter a valid candidate/artwork number", "error");
+      return;
+    }
+    await adjustVotes(num, count, "add");
+    setArtNumInput("");
+  }
 
   const loadTickets = useCallback(async () => {
     const r = await apiGet<{ voters: VoterTicket[] }>("/api/admin/voters", headers());
@@ -255,6 +292,153 @@ export default function AdminPage() {
             <div className="s-label">Artworks</div>
             <div className="s-value">{state?.artCount ?? 0}</div>
           </div>
+        </div>
+
+        {/* Candidate Vote Management */}
+        <div className="panel">
+          <h3>🗳️ Candidate Vote Management</h3>
+          <div className="panel-sub">
+            Manually increase or adjust votes for any candidate / artwork. Changes update the leaderboard in real time.
+          </div>
+
+          <form onSubmit={handleManualSubmit} className="actions" style={{ marginBottom: 20 }}>
+            <div className="field" style={{ maxWidth: 160, margin: 0 }}>
+              <label>Candidate #</label>
+              <input
+                type="number"
+                min={1}
+                placeholder="e.g. 5"
+                value={artNumInput}
+                onChange={(e) => setArtNumInput(e.target.value)}
+              />
+            </div>
+            <div className="field" style={{ maxWidth: 140, margin: 0 }}>
+              <label>Votes to add</label>
+              <input
+                type="number"
+                min={1}
+                max={500}
+                value={voteDeltaInput}
+                onChange={(e) => setVoteDeltaInput(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="btn primary" style={{ alignSelf: "end" }} disabled={busy}>
+              + Add Votes
+            </button>
+          </form>
+
+          {state?.artworks && state.artworks.length > 0 && (
+            <>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search candidate # or category..."
+                  value={artSearch}
+                  onChange={(e) => setArtSearch(e.target.value)}
+                  style={{ maxWidth: 280, fontSize: 13.5 }}
+                />
+                <span style={{ fontSize: 12.5, color: "var(--text-dim)" }}>
+                  Showing {
+                    state.artworks.filter((a) =>
+                      !artSearch.trim() ||
+                      String(a.number).includes(artSearch.trim()) ||
+                      a.category.name.toLowerCase().includes(artSearch.trim().toLowerCase())
+                    ).length
+                  } of {state.artworks.length} candidates
+                </span>
+              </div>
+
+              <div style={{ maxHeight: 380, overflowY: "auto", borderRadius: 8, border: "1px solid var(--card-border)" }}>
+                <table className="cat-table" style={{ margin: 0 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 110 }}>Candidate #</th>
+                      <th>Category</th>
+                      <th style={{ width: 130 }}>Current Votes</th>
+                      <th style={{ textAlign: "right", paddingRight: 16 }}>Quick Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {state.artworks
+                      .filter((a) =>
+                        !artSearch.trim() ||
+                        String(a.number).includes(artSearch.trim()) ||
+                        a.category.name.toLowerCase().includes(artSearch.trim().toLowerCase())
+                      )
+                      .map((art) => (
+                        <tr key={art.number}>
+                          <td style={{ fontWeight: 700, fontSize: 15 }}>#{art.number}</td>
+                          <td>
+                            <span className="legend-range" style={{ textTransform: "uppercase" }}>
+                              {art.category.name}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "3px 10px",
+                                borderRadius: 999,
+                                fontWeight: 700,
+                                fontSize: 13,
+                                background: art.votes > 0 ? "rgba(139, 92, 246, 0.2)" : "rgba(255,255,255,0.06)",
+                                color: art.votes > 0 ? "#c084fc" : "var(--text-dim)",
+                                border: art.votes > 0 ? "1px solid rgba(192, 132, 252, 0.3)" : "none",
+                              }}
+                            >
+                              {art.votes} {art.votes === 1 ? "vote" : "votes"}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: "right", paddingRight: 12 }}>
+                            <div style={{ display: "inline-flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                              <button
+                                type="button"
+                                className="btn small primary"
+                                disabled={busy}
+                                onClick={() => adjustVotes(art.number, 1, "add")}
+                                title="Add 1 vote"
+                              >
+                                +1
+                              </button>
+                              <button
+                                type="button"
+                                className="btn small primary"
+                                disabled={busy}
+                                onClick={() => adjustVotes(art.number, 5, "add")}
+                                title="Add 5 votes"
+                              >
+                                +5
+                              </button>
+                              <button
+                                type="button"
+                                className="btn small primary"
+                                disabled={busy}
+                                onClick={() => adjustVotes(art.number, 10, "add")}
+                                title="Add 10 votes"
+                              >
+                                +10
+                              </button>
+                              {art.votes > 0 && (
+                                <button
+                                  type="button"
+                                  className="btn small"
+                                  disabled={busy}
+                                  onClick={() => adjustVotes(art.number, 1, "remove")}
+                                  title="Remove 1 vote"
+                                  style={{ color: "var(--danger)", borderColor: "rgba(248,113,113,0.3)" }}
+                                >
+                                  -1
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Settings */}
