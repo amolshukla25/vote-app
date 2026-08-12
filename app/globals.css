@@ -152,6 +152,19 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
 }
 
+.brand-sub a,
+.app-footer a {
+  color: #c084fc;
+  text-decoration: none;
+  transition: color 0.16s ease, text-decoration 0.16s ease;
+}
+
+.brand-sub a:hover,
+.app-footer a:hover {
+  color: #e9d5ff;
+  text-decoration: underline;
+}
+
 .app-footer .credit {
   display: inline-flex;
   align-items: center;
