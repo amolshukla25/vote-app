@@ -1,0 +1,8 @@
+
+  🎨 Art Showdown is running!
+
+  Local:    http://localhost:3000
+  Network:  http://192.168.56.1:3000   <- scan this on phones
+  Network:  http://192.168.1.16:3000   <- scan this on phones
+  Admin:    http://localhost:3000/admin.html   (default PIN: 1234)
+

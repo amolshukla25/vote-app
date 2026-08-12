@@ -1,0 +1,35 @@
+import { NextRequest, NextResponse } from "next/server";
+import { artList } from "@/lib/config";
+import { getConfig, getCounts, getVoterCount } from "@/lib/data";
+import { isAdmin, json } from "@/lib/http";
+
+export const dynamic = "force-dynamic";
+
+/** Full admin state (requires X-Admin-Pin header).
+ *  GET /api/admin/state */
+export async function GET(req: NextRequest) {
+  if (!(await isAdmin(req))) return json({ error: "Invalid admin PIN" }, 401);
+  try {
+    const config = await getConfig();
+    const { counts, totalVotes } = await getCounts();
+    const arts = artList(config);
+    const winner =
+      arts
+        .map((a) => ({ ...a, votes: counts[a.number] || 0 }))
+        .sort((a, b) => b.votes - a.votes)[0] ?? null;
+
+    return NextResponse.json({
+      eventTitle: config.eventTitle,
+      adminPin: config.adminPin,
+      votingOpen: config.votingOpen,
+      votesPerVoter: config.votesPerVoter,
+      categories: config.categories,
+      totalVotes,
+      winner: winner && winner.votes > 0 ? winner : null,
+      voterCount: await getVoterCount(),
+      artCount: arts.length,
+    });
+  } catch (err) {
+    return json({ error: err instanceof Error ? err.message : "Request failed" }, 500);
+  }
+}
