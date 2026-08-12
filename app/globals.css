@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Art Showdown — shared styles
+   Art Showdown — shared styles (ported from legacy-express/public/style.css)
    ========================================================================== */
 :root {
   --bg: #0b0f1a;
@@ -30,7 +30,10 @@ body {
     var(--bg);
   color: var(--text);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
+
+a { color: inherit; text-decoration: none; }
 
 .bg-decor {
   position: fixed;
@@ -85,6 +88,25 @@ body {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.35); opacity: 0.65; }
 }
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.toplink {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  padding: 7px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+}
+.toplink:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.25); }
 
 .badge {
   flex: none;
@@ -154,6 +176,7 @@ body {
 
 .tab {
   flex: none;
+  font: inherit;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-dim);
@@ -521,16 +544,6 @@ body {
 
 .admin-wrap { max-width: 960px; margin: 0 auto; padding: 22px 16px 80px; }
 
-.admin-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-.admin-head h1 { font-size: 24px; }
-
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -545,7 +558,6 @@ body {
 }
 .stat-card .s-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); }
 .stat-card .s-value { font-size: 26px; font-weight: 800; margin-top: 4px; }
-.stat-card .s-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
 
 .panel {
   background: var(--card);
@@ -641,14 +653,6 @@ body {
 .qr-ticket .t-qr { font-size: 12px; font-weight: 700; margin-top: 6px; }
 .qr-ticket.voted { border: 3px solid #8b5cf6; }
 
-.voter-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-.voter-table th {
-  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
-  color: var(--text-dim); padding: 8px 10px; border-bottom: 1px solid var(--card-border);
-}
-.voter-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13.5px; }
-.voter-table .tok { font-family: 'Courier New', monospace; font-size: 12.5px; color: #c4b5fd; }
-
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
 .inline-msg { font-size: 13px; color: var(--ok); margin-top: 10px; min-height: 18px; }
@@ -660,7 +664,7 @@ body {
 @media print {
   body.printing * { visibility: hidden; }
   body.printing .print-area, body.printing .print-area * { visibility: visible; }
-  body.printing .print-area {
+  body.printing .qr-list {
     position: absolute;
     inset: 0;
     display: grid;
