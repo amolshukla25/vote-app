@@ -31,3 +31,28 @@ export async function DELETE(
     return json({ error: err instanceof Error ? err.message : "Request failed" }, 500);
   }
 }
+
+/** Toggle block status for a voter token.
+ *  PATCH /api/admin/voter/:token  body: { blocked: boolean } */
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  try {
+    const denied = await requireAdmin(req);
+    if (denied) return denied;
+    const { token } = await params;
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const blocked = Boolean(body.blocked);
+
+    const db = await getDb();
+    const votersCol = db.collection<{ _id: string; blocked?: boolean }>(COLLECTIONS.VOTERS);
+
+    const res = await votersCol.updateOne({ _id: token }, { $set: { blocked } });
+    if (res.matchedCount === 0) return json({ error: "voter not found" }, 404);
+
+    return json({ ok: true, token, blocked });
+  } catch (err) {
+    return json({ error: err instanceof Error ? err.message : "Request failed" }, 500);
+  }
+}

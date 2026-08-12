@@ -15,10 +15,12 @@ export async function GET(req: Request) {
     const config = await getConfig();
     const { counts, totalVotes } = await getCounts();
     const arts = artList(config);
+    const blockedSet = new Set(config.blockedArtworks || []);
     const artworks = arts.map((a) => ({
       number: a.number,
       category: a.category,
       votes: counts[a.number] || 0,
+      blocked: blockedSet.has(a.number),
     }));
 
     const winner =
@@ -31,6 +33,7 @@ export async function GET(req: Request) {
       votingOpen: config.votingOpen,
       votesPerVoter: config.votesPerVoter,
       categories: config.categories,
+      blockedArtworks: config.blockedArtworks || [],
       totalVotes,
       winner: winner && winner.votes > 0 ? winner : null,
       voterCount: await getVoterCount(),

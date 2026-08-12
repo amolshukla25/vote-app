@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(body.categories)) {
       config.categories = normalizeCategories(body.categories);
     }
+    if (Array.isArray(body.blockedArtworks)) {
+      config.blockedArtworks = body.blockedArtworks.filter((n): n is number => Number.isInteger(n));
+    }
 
     await saveConfig(config);
 

@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 interface VoterDoc {
   _id: string;
   votes: number[];
+  blocked?: boolean;
 }
 
 /**
@@ -42,6 +43,12 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
+    if (config.blockedArtworks?.includes(num)) {
+      return NextResponse.json(
+        { error: `Voting for candidate #${num} is currently blocked by the admin.` },
+        { status: 403 }
+      );
+    }
     if (!categoryOf(config, num)) {
       return NextResponse.json({ error: "No artwork with that number" }, { status: 404 });
     }
@@ -56,6 +63,13 @@ export async function POST(req: NextRequest) {
     const voter = await votersCol.findOne({ _id: token });
     if (!voter) {
       return NextResponse.json({ error: "unknown voter", needRegister: true }, { status: 401 });
+    }
+
+    if (voter.blocked) {
+      return NextResponse.json(
+        { error: "Your voting account has been blocked by the admin." },
+        { status: 403 }
+      );
     }
 
     const idx = voter.votes.indexOf(num);

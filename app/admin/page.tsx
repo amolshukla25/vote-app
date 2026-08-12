@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiDelete, apiGet, apiPost } from "@/lib/api";
+import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
 import type { AdminState, Category, VoterTicket } from "@/lib/types";
 import { useToast } from "../_components/toast";
 
@@ -194,6 +194,40 @@ export default function AdminPage() {
     await refreshState();
   }
 
+  async function toggleBlockVoter(token: string, currentBlocked: boolean) {
+    try {
+      setBusy(true);
+      await apiPatch(`/api/admin/voter/${encodeURIComponent(token)}`, { blocked: !currentBlocked }, headers());
+      show(`Voter ticket ${!currentBlocked ? "blocked 🚫" : "unblocked 🟢"}`, !currentBlocked ? "error" : "success");
+      await loadTickets();
+    } catch (err) {
+      show(err instanceof Error ? err.message : "Failed to update voter block status", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleBlockCandidate(artNumber: number, currentBlocked: boolean) {
+    if (!state) return;
+    try {
+      setBusy(true);
+      const currentBlockedList = state.blockedArtworks || [];
+      const updatedBlockedList = currentBlocked
+        ? currentBlockedList.filter((n) => n !== artNumber)
+        : [...currentBlockedList, artNumber];
+      await apiPost("/api/admin/config", { blockedArtworks: updatedBlockedList }, headers());
+      show(
+        `Candidate #${artNumber} ${!currentBlocked ? "blocked 🚫" : "unblocked 🟢"}`,
+        !currentBlocked ? "error" : "success"
+      );
+      await refreshState();
+    } catch (err) {
+      show(err instanceof Error ? err.message : "Failed to update candidate block status", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function printAll() {
     document.body.classList.add("printing");
     setTimeout(() => {
@@ -369,6 +403,7 @@ export default function AdminPage() {
                       <th style={{ width: 110 }}>Candidate #</th>
                       <th>Category</th>
                       <th style={{ width: 130 }}>Current Votes</th>
+                      <th style={{ width: 140 }}>Voting Control</th>
                       <th style={{ textAlign: "right", paddingRight: 16 }}>Quick Actions</th>
                     </tr>
                   </thead>
@@ -402,6 +437,36 @@ export default function AdminPage() {
                             >
                               {art.votes} {art.votes === 1 ? "vote" : "votes"}
                             </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn small"
+                              disabled={busy}
+                              onClick={() => toggleBlockCandidate(art.number, !!art.blocked)}
+                              title={
+                                art.blocked
+                                  ? "Unblock candidate to allow further votes"
+                                  : "Block candidate from receiving further votes"
+                              }
+                              style={
+                                art.blocked
+                                  ? {
+                                      background: "rgba(34,197,94,0.2)",
+                                      borderColor: "rgba(34,197,94,0.5)",
+                                      color: "#4ade80",
+                                      fontWeight: 700,
+                                    }
+                                  : {
+                                      background: "rgba(239,68,68,0.15)",
+                                      borderColor: "rgba(239,68,68,0.4)",
+                                      color: "#ef4444",
+                                      fontWeight: 700,
+                                    }
+                              }
+                            >
+                              {art.blocked ? "🟢 Unblock" : "🚫 Block Art"}
+                            </button>
                           </td>
                           <td style={{ textAlign: "right", paddingRight: 12 }}>
                             <div style={{ display: "inline-flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -643,7 +708,7 @@ export default function AdminPage() {
                     t.votes.some((v) => String(v).includes(ticketSearch.trim()))
                 )
                 .map((v) => (
-                  <div key={v.token} className={"qr-ticket" + (v.voteCount > 0 ? " voted" : "")}>
+                  <div key={v.token} className={"qr-ticket" + (v.voteCount > 0 ? " voted" : "") + (v.blocked ? " blocked" : "")}>
                     <div className="t-label">Art Showdown · Vote</div>
                     <div className="t-token">#{v.short}</div>
                     {v.qr ? (
@@ -655,19 +720,41 @@ export default function AdminPage() {
                     <div className="t-meta">
                       {v.voteCount > 0 ? "Voted: #" + v.votes.join(", #") : "Not voted yet"}
                     </div>
-                    <div className="t-qr">🔒 scan to vote</div>
-                    <button
-                      className="btn small danger"
-                      style={{ marginTop: 6 }}
-                      onClick={() => {
-                        if (confirm(`Remove voter ticket #${v.short}? This will also delete their votes.`)) {
-                          removeTicket(v.token);
+                    {v.blocked ? (
+                      <div style={{ color: "#ef4444", fontWeight: 700, fontSize: 12, margin: "4px 0" }}>
+                        ⛔ BLOCKED FROM VOTING
+                      </div>
+                    ) : (
+                      <div className="t-qr">🔒 scan to vote</div>
+                    )}
+                    <div style={{ display: "flex", gap: 6, marginTop: 6, width: "100%", justifyContent: "center" }}>
+                      <button
+                        className="btn small"
+                        disabled={busy}
+                        style={
+                          v.blocked
+                            ? { background: "rgba(34,197,94,0.2)", borderColor: "rgba(34,197,94,0.5)", color: "#4ade80", fontWeight: 700, flex: 1 }
+                            : { color: "var(--danger)", borderColor: "rgba(248,113,113,0.4)", flex: 1 }
                         }
-                      }}
-                      title="Remove this voter ticket and revoke their votes"
-                    >
-                      🗑️ Remove Voter
-                    </button>
+                        onClick={() => toggleBlockVoter(v.token, !!v.blocked)}
+                        title={v.blocked ? "Unblock voter" : "Block voter from casting or updating further votes"}
+                      >
+                        {v.blocked ? "🟢 Unblock" : "🚫 Block"}
+                      </button>
+                      <button
+                        className="btn small danger"
+                        disabled={busy}
+                        style={{ flex: 1 }}
+                        onClick={() => {
+                          if (confirm(`Remove voter ticket #${v.short}? This will also delete their votes.`)) {
+                            removeTicket(v.token);
+                          }
+                        }}
+                        title="Remove this voter ticket and revoke their votes"
+                      >
+                        🗑️ Remove
+                      </button>
+                    </div>
                   </div>
                 ))
             )}

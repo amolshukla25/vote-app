@@ -13,6 +13,7 @@ export interface AppConfig {
   votingOpen: boolean;
   votesPerVoter: number;
   categories: Category[];
+  blockedArtworks?: number[];
 }
 
 /** Shape of GET /api/config — everything the public pages need. */
@@ -23,6 +24,7 @@ export interface PublicConfig {
   categories: Category[];
   /** Maps artwork number (string) -> public image URL. */
   artImages: Record<string, string>;
+  blockedArtworks?: number[];
 }
 
 export interface Artwork {
@@ -40,6 +42,7 @@ export interface AdminArtwork {
   number: number;
   category: Category;
   votes: number;
+  blocked?: boolean;
 }
 
 export interface AdminState {
@@ -52,6 +55,7 @@ export interface AdminState {
   voterCount: number;
   artCount: number;
   artworks: AdminArtwork[];
+  blockedArtworks?: number[];
 }
 
 export interface VoterTicket {
@@ -61,4 +65,5 @@ export interface VoterTicket {
   votes: number[];
   voteCount: number;
   qr: string;
+  blocked?: boolean;
 }

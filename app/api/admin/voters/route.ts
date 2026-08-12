@@ -12,6 +12,7 @@ interface VoterDoc {
   votes: number[];
   createdAt: number;
   printed?: boolean;
+  blocked?: boolean;
 }
 
 const ticketUrl = (origin: string, token: string) => `${origin}/?t=${token}`;
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest) {
       .map((t) => {
         const v = voters.find((x) => x._id === t.token);
         const votes = v?.votes || [];
-        return { ...t, votes, voteCount: votes.length };
+        return { ...t, votes, voteCount: votes.length, blocked: Boolean(v?.blocked) };
       })
       .sort((a, b) => b.voteCount - a.voteCount);
 

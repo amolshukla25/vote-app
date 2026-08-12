@@ -260,15 +260,17 @@ export default function VotePage() {
               .filter((a) => activeCat === "all" || a.category.id === activeCat)
               .map((art, i) => {
                 const voted = myVotes.includes(art.number);
+                const isBlocked = Boolean(config?.blockedArtworks?.includes(art.number));
                 const color = catColor(art.category.id);
                 return (
                   <button
                     key={art.number}
-                    className={"art-card" + (voted ? " voted" : "")}
+                    className={"art-card" + (voted ? " voted" : "") + (isBlocked ? " blocked" : "")}
                     style={
                       {
                         animationDelay: Math.min(i * 14, 400) + "ms",
                         ["--cat" as string]: color,
+                        opacity: isBlocked ? 0.75 : 1,
                       } as React.CSSProperties
                     }
                     onClick={() => vote(art.number)}
@@ -284,7 +286,26 @@ export default function VotePage() {
                         <div className="art-num">{art.number}</div>
                       </div>
                     )}
-                    <div className="art-check">✓</div>
+                    {isBlocked ? (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          background: "rgba(239, 68, 68, 0.9)",
+                          color: "#fff",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                        }}
+                      >
+                        ⛔ BLOCKED
+                      </div>
+                    ) : (
+                      <div className="art-check">✓</div>
+                    )}
                     <div className="art-meta">
                       <span className="art-cat">{art.category.name}</span>
                       <span className="art-votes">

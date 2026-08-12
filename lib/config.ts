@@ -9,6 +9,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   adminPin: "1234",
   votingOpen: true,
   votesPerVoter: 3,
+  blockedArtworks: [],
   categories: [
     { id: "2d", name: "2D", start: 1, end: 44 },
     { id: "3d", name: "3D", start: 53, end: 78 },
@@ -48,6 +49,7 @@ export function toPublicConfig(config: AppConfig, artImages: Record<string, stri
     votesPerVoter: config.votesPerVoter,
     categories: config.categories,
     artImages,
+    blockedArtworks: config.blockedArtworks || [],
   };
 }
 

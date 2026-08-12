@@ -36,6 +36,19 @@ export async function apiPost<T>(
   return handle<T>(res);
 }
 
+export async function apiPatch<T>(
+  url: string,
+  body: unknown,
+  headers: Record<string, string> = {}
+): Promise<T> {
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+  return handle<T>(res);
+}
+
 export async function apiDelete<T>(url: string, headers: Record<string, string> = {}): Promise<T> {
   const res = await fetch(url, { method: "DELETE", headers });
   return handle<T>(res);
