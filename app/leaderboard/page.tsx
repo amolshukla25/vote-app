@@ -140,11 +140,8 @@ export default function LeaderboardPage() {
             <div className="brand-sub">
               Made with <span className="heart">❤️</span> by{" "}
               <a href="https://amolshukla.online" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700 }}>
-                Amol Shukla
-              </a>{" "}
-              (<a href="https://amolshukla.online" target="_blank" rel="noopener noreferrer">
                 amolshukla.online
-              </a>)
+              </a>
             </div>
           </div>
         </div>
@@ -281,12 +278,6 @@ export default function LeaderboardPage() {
         <div className="credit">
           Made with <span className="heart">❤️</span> by{" "}
           <a href="https://amolshukla.online" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700 }}>
-            Amol Shukla
-          </a>
-        </div>
-        <div style={{ fontSize: 12.5, marginTop: 2 }}>
-          🌐{" "}
-          <a href="https://amolshukla.online" target="_blank" rel="noopener noreferrer">
             amolshukla.online
           </a>
         </div>
