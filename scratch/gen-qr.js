@@ -1,7 +1,7 @@
 const QRCode = require('qrcode');
 const path = require('path');
 
-const url = 'https://swift-jobs-search.loca.lt';
+const url = 'https://outcome-superintendent-goto-public.trycloudflare.com';
 const outFile = path.join(__dirname, '..', 'public', 'vote-qr.png');
 
 QRCode.toFile(outFile, url, {

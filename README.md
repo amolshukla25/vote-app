@@ -74,3 +74,20 @@ Open http://localhost:3000 — voting, the leaderboard, and `/admin` all work ag
 | `POST /api/admin/reset`     | Reset votes / wipe everything                |
 
 The legacy Express implementation is preserved in [`legacy-express/`](legacy-express/).
+
+## Troubleshooting
+
+**“Artworks are not showing / the page says No artworks here yet”**
+
+- If the API returns `500` with an SSL error (`tlsv1 alert internal error`), the serverless host can't reach Atlas — see below.
+- Otherwise, artwork images are separate from the database: cards show big numbers until you drop `<number>.jpg/.png` files into `public/art/` and push them (the manifest rebuilds on deploy).
+
+**Database connection fails on Vercel with `SSL routines:ssl3_read_bytes:tlsv1 alert internal error`**
+
+Vercel functions connect from dynamic cloud IPs. MongoDB Atlas blocks any IP that isn't on the cluster's access list, and the block shows up as a TLS handshake failure.
+
+1. In **MongoDB Atlas → Security → Network Access → Add IP Address**, choose **Allow access from anywhere** (`0.0.0.0/0`) and save.
+2. In **Vercel → Project → Settings → Environment Variables**, confirm `MONGODB_URI` is set for the **Production** environment (special characters in the password must be URL-encoded, e.g. `@` → `%40`).
+3. Redeploy from the Vercel Deployments tab if you changed environment variables.
+
+Verify with `curl https://<your-app>.vercel.app/api/config` — it should return JSON (event title, categories, …) instead of an error.
