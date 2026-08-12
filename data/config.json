@@ -1,0 +1,44 @@
+{
+  "eventTitle": "Art Showdown 2026",
+  "adminPin": "1234",
+  "votingOpen": true,
+  "votesPerVoter": 2,
+  "categories": [
+    {
+      "id": "2d",
+      "name": "2D",
+      "start": 1,
+      "end": 44
+    },
+    {
+      "id": "3d",
+      "name": "3D",
+      "start": 53,
+      "end": 78
+    },
+    {
+      "id": "painting",
+      "name": "Painting",
+      "start": 84,
+      "end": 119
+    },
+    {
+      "id": "sketch",
+      "name": "Sketch",
+      "start": 120,
+      "end": 148
+    },
+    {
+      "id": "ai",
+      "name": "AI",
+      "start": null,
+      "end": null
+    },
+    {
+      "id": "game",
+      "name": "Game / Event",
+      "start": null,
+      "end": null
+    }
+  ]
+}
