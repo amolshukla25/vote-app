@@ -260,7 +260,15 @@ export default function AdminPage() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-dot" />
-          <h1>{state?.eventTitle || "Admin"}</h1>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h1>{state?.eventTitle || "Admin Panel"}</h1>
+              <span className="gameverse-tag">🎮 Gameverse Art Gallery</span>
+            </div>
+            <div className="brand-sub">
+              Made with <span className="heart">❤️</span> by <b>Amol Shukla</b>
+            </div>
+          </div>
         </div>
         <button className="btn small" onClick={logout}>
           Log out
@@ -677,6 +685,13 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      <footer className="app-footer">
+        <div className="footer-brand">🎮 Gameverse Art Gallery</div>
+        <div className="credit">
+          Made with <span className="heart">❤️</span> by <b>Amol Shukla</b>
+        </div>
+      </footer>
 
       {toastEl}
     </>
