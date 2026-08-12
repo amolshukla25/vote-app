@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { apiGet, apiPost, ApiError } from "@/lib/api";
-import { catColor, shortToken } from "@/lib/client-utils";
+import { catColor } from "@/lib/client-utils";
 import type { PublicConfig, Category } from "@/lib/types";
 import { useToast } from "./_components/toast";
 
@@ -15,20 +15,27 @@ interface Art {
 
 const TOKEN_KEY = "artVoterToken";
 
+// Open voting — no QR / login required. Tapping a card votes, tapping again
+// un-votes; each device keeps one vote per artwork behind the scenes.
+const ANON_HINT = (
+  <>🎉 Open voting — no sign-up needed. Tap an artwork to vote, tap again to change.</>
+);
+
 export default function VotePage() {
   const [config, setConfig] = useState<PublicConfig | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [myVotes, setMyVotes] = useState<number[]>([]);
   const [activeCat, setActiveCat] = useState("all");
   const [arts, setArts] = useState<Art[]>([]);
-  const [hint, setHint] = useState<React.ReactNode>("Loading…");
   const [error, setError] = useState<string | null>(null);
 
   const tokenRef = useRef<string | null>(null);
   const configRef = useRef<PublicConfig | null>(null);
   const { show, el: toastEl } = useToast();
 
-  // ---------- Voter identity (QR check-in) ----------
+  // ---------- Anonymous voter (no QR / login required) ----------
+  // The device registers a silent anonymous token so its votes can be
+  // tracked for the toggle (tap on / tap off) and the per-device limit.
   const ensureVoter = useCallback(async () => {
     const fromUrl = new URLSearchParams(window.location.search).get("t");
     let token = fromUrl || localStorage.getItem(TOKEN_KEY);
@@ -38,12 +45,9 @@ export default function VotePage() {
         const me = await apiGet<{ votes: number[] }>("/api/me?token=" + encodeURIComponent(token));
         tokenRef.current = token;
         setMyVotes(me.votes || []);
-        setHint(
-          <>You are voting as <b>{shortToken(token)}</b>. Tap an artwork to vote — tap again to change it.</>
-        );
         return;
       } catch {
-        /* token unknown — fall through and register a fresh one */
+        /* stale token — re-register silently */
       }
     }
 
@@ -52,9 +56,6 @@ export default function VotePage() {
     localStorage.setItem(TOKEN_KEY, token);
     tokenRef.current = token;
     setMyVotes([]);
-    setHint(
-      <>You are voting as <b>{shortToken(token)}</b>. Tap an artwork to vote — tap again to change it.</>
-    );
   }, []);
 
   // ---------- Load data ----------
@@ -191,7 +192,7 @@ export default function VotePage() {
       </header>
 
       <main className="wrap">
-        <div className="voter-hint">{hint}</div>
+        <div className="voter-hint">{ANON_HINT}</div>
 
         {config && (
           <div className="cat-legend">

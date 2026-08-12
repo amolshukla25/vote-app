@@ -2,7 +2,7 @@
   "eventTitle": "Art Showdown 2026",
   "adminPin": "1234",
   "votingOpen": true,
-  "votesPerVoter": 2,
+  "votesPerVoter": 3,
   "categories": [
     {
       "id": "2d",

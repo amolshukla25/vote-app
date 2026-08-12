@@ -22,7 +22,7 @@ const DEFAULT_CONFIG = {
   eventTitle: 'Art Showdown 2026',
   adminPin: '1234',
   votingOpen: true,
-  votesPerVoter: 1,
+  votesPerVoter: 3,
   categories: [
     { id: '2d', name: '2D', start: 1, end: 44 },
     { id: '3d', name: '3D', start: 53, end: 78 },

@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Preserved legacy Express app (CommonJS, not part of the Next.js app).
     "legacy-express/**",
+    // Throwaway test scripts.
+    "scratch/**",
   ]),
 ]);
 
