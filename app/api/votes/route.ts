@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 /** Live vote counts. GET /api/votes */
 export async function GET() {
   try {
-    return NextResponse.json(await getCounts());
+    const { counts, totalVotes } = await getCounts();
+    return NextResponse.json({ counts, totalVotes });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Request failed" },

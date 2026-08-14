@@ -63,8 +63,8 @@ export default function VotePage() {
     let cancelled = false;
     (async () => {
       try {
-        await ensureVoter();
-        const [cfg, votes] = await Promise.all([
+        const [, cfg, votes] = await Promise.all([
+          ensureVoter(),
           apiGet<PublicConfig>("/api/config"),
           apiGet<{ counts: Record<string, number> }>("/api/votes"),
         ]);
@@ -154,7 +154,7 @@ export default function VotePage() {
       } catch {
         /* ignore */
       }
-    }, 3000);
+    }, 5000);
     return () => clearInterval(t);
   }, []);
 

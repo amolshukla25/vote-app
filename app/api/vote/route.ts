@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categoryOf } from "@/lib/config";
-import { getCounts, getConfig } from "@/lib/data";
+import { getCounts, getConfig, invalidateCache } from "@/lib/data";
 import { getDb, COLLECTIONS } from "@/lib/db";
 import { errMsg } from "@/lib/http";
 
@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    invalidateCache();
     const fresh = await votersCol.findOne({ _id: token });
     const { counts } = await getCounts();
 

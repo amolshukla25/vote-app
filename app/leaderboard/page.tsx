@@ -87,7 +87,7 @@ export default function LeaderboardPage() {
       } catch {
         /* keep last good state */
       }
-    }, 2000);
+    }, 5000);
     return () => clearInterval(t);
   }, []);
 

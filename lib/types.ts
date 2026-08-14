@@ -42,6 +42,10 @@ export interface AdminArtwork {
   number: number;
   category: Category;
   votes: number;
+  /** Votes cast by real voter tickets (not admin-added). */
+  publicVotes: number;
+  /** Votes added manually by the admin. */
+  adminVotes: number;
   blocked?: boolean;
 }
 
@@ -51,6 +55,10 @@ export interface AdminState {
   votesPerVoter: number;
   categories: Category[];
   totalVotes: number;
+  /** Votes cast by real voter tickets (not admin-added). */
+  totalPublicVotes: number;
+  /** Votes added manually by the admin. */
+  totalAdminVotes: number;
   winner: Winner | null;
   voterCount: number;
   artCount: number;

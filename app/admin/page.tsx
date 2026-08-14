@@ -318,6 +318,9 @@ export default function AdminPage() {
           <div className="stat-card">
             <div className="s-label">Total votes</div>
             <div className="s-value">{state?.totalVotes ?? 0}</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
+              {state?.totalPublicVotes ?? 0} audience · {state?.totalAdminVotes ?? 0} admin
+            </div>
           </div>
           <div className="stat-card">
             <div className="s-label">Leader</div>
@@ -402,7 +405,10 @@ export default function AdminPage() {
                     <tr>
                       <th style={{ width: 110 }}>Candidate #</th>
                       <th>Category</th>
-                      <th style={{ width: 130 }}>Current Votes</th>
+                      <th style={{ width: 150 }}>
+                        Current Votes
+                        <div style={{ fontSize: 11, fontWeight: 500, color: "var(--text-dim)" }}>public · admin</div>
+                      </th>
                       <th style={{ width: 140 }}>Voting Control</th>
                       <th style={{ textAlign: "right", paddingRight: 16 }}>Quick Actions</th>
                     </tr>
@@ -437,6 +443,9 @@ export default function AdminPage() {
                             >
                               {art.votes} {art.votes === 1 ? "vote" : "votes"}
                             </span>
+                            <div style={{ fontSize: 11.5, color: "var(--text-dim)", marginTop: 4 }}>
+                              {art.publicVotes} public · {art.adminVotes} admin
+                            </div>
                           </td>
                           <td>
                             <button
